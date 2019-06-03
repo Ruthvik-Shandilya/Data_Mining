@@ -1,4 +1,6 @@
 from codecs import StreamReaderWriter
+
+from textblob import TextBlob
 from typing import Union, TextIO
 from sklearn.model_selection import train_test_split
 from collections import Counter
@@ -205,6 +207,16 @@ def Negative_word_count(text):
             neg += val
     return neg
 
+def sentiment(text):
+
+    analysis = TextBlob(text)
+    if analysis.sentiment[0] > 0:
+        return 'positive'
+    elif analysis.sentiment[0] < 0:
+        return 'negative'
+    else:
+        return 'neutral'
+
 
 
 #from nltk.stem.snowball import SnowballStemmer
@@ -218,7 +230,9 @@ df2=permanent.dropna(axis=0,how='any')
 
 #df2['label_num'] = df2['reviews.doRecommend'].map({'TRUE':1, 'FALSE':0})
 
-df2['review_without_trailing_leading_blank spaces']=df2['reviews.text'].str.strip()
+df2['Combined_feature'] = df2['reviews.title'] + df2['reviews.text']
+
+df2['review_without_trailing_leading_blank spaces']=df2['Combined_feature'].str.strip()
 
 df2['review_toLower']=df2['review_without_trailing_leading_blank spaces'].str.lower()
 
@@ -233,6 +247,12 @@ df2['removed_repetation_chars']=df2['review_without_specialCharacters_alphaNumer
 stop_words = set(stopwords.words('english'))
 df2['review_without_stopwords'] = df2['removed_repetation_chars'].apply(lambda x: ' '.join([word for word in x.split() if word not in (stop_words)]))
 
+df2['polarity'] = df2['review_without_stopwords'].apply(lambda x: TextBlob(x).sentiment[0])
+
+#df2['Sentiment'] = df2['review_without_stopwords'].apply(sentiment)
+
+df2['subjectivity'] = df2['review_without_stopwords'].apply(lambda x: TextBlob(x).sentiment[1])
+
 #df2['tokenized_sents']=df2.apply(lambda row: nltk.word_tokenize(row['review_without_stopwords']),axis=1)
 
 #stemmer= PorterStemmer()
@@ -246,8 +266,6 @@ df2['review_without_stopwords'] = df2['removed_repetation_chars'].apply(lambda x
 df2['positive_words'] = df2['review_without_stopwords'].apply(Positive_word_count)
 
 df2['negative_words'] = df2['review_without_stopwords'].apply(Negative_word_count)
-
-df2['combined_words'] = df2['positive_words'] - df2['negative_words']
 
 
 # print(df2)
