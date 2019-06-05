@@ -12,19 +12,17 @@ from sklearn.metrics import classification_report
 # In[2]:
 
 
-X = []  # an element of X is represented as (filename,text)
-Y = []  # an element of Y represents the newsgroup category of the corresponding X element
+X = []  # an element of X is preprocessed reviews
+Y = []  # an element of Y represents the  labels of the corresponding X element
 
 
 with open('Dataset_preprocessed.csv', "r",encoding="utf8") as f:
             reader = csv.reader(f)
-            included_cols = [5,13]
-            # included_cols1 = [5]
+            included_cols = [5,13]   # here 2 column numbers for reviews and labels from preproceesed dataset csv
 
 
             for row in reader:
                 content = list(row[i] for i in included_cols)
-                # content1 = list(row[i] for i in included_cols1)
                 # print(content[0])
                 # print(content1)
                 X.append(content[1])
@@ -36,8 +34,6 @@ with open('Dataset_preprocessed.csv', "r",encoding="utf8") as f:
 # In[3]:
 
 
-# X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, Y, test_size=0.2, random_state=0)
-
 train = pd.read_csv(r"train_dataset.csv")
 X_train = train['review_without_stopwords']
 Y_train = train['reviews.doRecommend']
@@ -46,105 +42,25 @@ test = pd.read_csv(r"train_dataset.csv")
 X_test = train['review_without_stopwords']
 Y_test = train['reviews.doRecommend']
 
+# print("xtrain is:",X_train)
 
-
-# In[4]:
-
-
-# A list of common english words which should not affect predictions
-stopwords = ['a', 'about', 'above', 'across', 'after', 'afterwards', 'again', 'against', 'all', 'almost', 'alone',
-             'along', 'already', 'also', 'although', 'always', 'am', 'among', 'amongst', 'amoungst', 'amount',
-             'an', 'and', 'another', 'any', 'anyhow', 'anyone', 'anything', 'anyway', 'anywhere', 'are', 'around',
-             'as', 'at', 'back', 'be', 'became', 'because', 'become', 'becomes', 'becoming', 'been', 'before',
-             'beforehand', 'behind', 'being', 'below', 'beside', 'besides', 'between', 'beyond', 'bill', 'both',
-             'bottom', 'but', 'by', 'call', 'can', 'cannot', 'cant', 'co', 'con', 'could', 'couldnt', 'cry', 'de',
-             'describe', 'detail', 'did', 'do', 'does', 'doing', 'don', 'done', 'down', 'due', 'during', 'each', 'eg',
-             'eight', 'either', 'eleven', 'else', 'elsewhere', 'empty', 'enough', 'etc', 'even', 'ever', 'every',
-             'everyone',
-             'everything', 'everywhere', 'except', 'few', 'fifteen', 'fify', 'fill', 'find', 'fire', 'first', 'five',
-             'for',
-             'former', 'formerly', 'forty', 'found', 'four', 'from', 'front', 'full', 'further', 'get', 'give', 'go',
-             'had',
-             'has', 'hasnt', 'have', 'having', 'he', 'hence', 'her', 'here', 'hereafter', 'hereby', 'herein',
-             'hereupon',
-             'hers', 'herself', 'him', 'himself', 'his', 'how', 'however', 'hundred', 'i', 'ie', 'if', 'in', 'inc',
-             'indeed',
-             'interest', 'into', 'is', 'it', 'its', 'itself', 'just', 'keep', 'last', 'latter', 'latterly', 'least',
-             'less',
-             'ltd', 'made', 'many', 'may', 'me', 'meanwhile', 'might', 'mill', 'mine', 'more', 'moreover', 'most',
-             'mostly',
-             'move', 'much', 'must', 'my', 'myself', 'name', 'namely', 'neither', 'never', 'nevertheless', 'next',
-             'nine',
-             'no', 'nobody', 'none', 'noone', 'nor', 'not', 'nothing', 'now', 'nowhere', 'of', 'off', 'often', 'on',
-             'once',
-             'one', 'only', 'onto', 'or', 'other', 'others', 'otherwise', 'our', 'ours', 'ourselves', 'out', 'over',
-             'own',
-             'part', 'per', 'perhaps', 'please', 'put', 'rather', 're', 's', 'same', 'see', 'seem', 'seemed', 'seeming',
-             'seems', 'serious', 'several', 'she', 'should', 'show', 'side', 'since', 'sincere', 'six', 'sixty', 'so',
-             'some', 'somehow', 'someone', 'something', 'sometime', 'sometimes', 'somewhere', 'still', 'such', 'system',
-             't', 'take', 'ten', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'thence',
-             'there',
-             'thereafter', 'thereby', 'therefore', 'therein', 'thereupon', 'these', 'they', 'thickv', 'thin', 'third',
-             'this',
-             'those', 'though', 'three', 'through', 'throughout', 'thru', 'thus', 'to', 'together', 'too', 'top',
-             'toward',
-             'towards', 'twelve', 'twenty', 'two', 'un', 'under', 'until', 'up', 'upon', 'us', 'very', 'via', 'was',
-             'we',
-             'well', 'were', 'what', 'whatever', 'when', 'whence', 'whenever', 'where', 'whereafter', 'whereas',
-             'whereby',
-             'wherein', 'whereupon', 'wherever', 'whether', 'which', 'while', 'whither', 'who', 'whoever', 'whole',
-             'whom',
-             'whose', 'why', 'will', 'with', 'within', 'without', 'would', 'yet', 'you', 'your', 'yours', 'yourself',
-             'yourselves']
 
 # In[5]:
-print("xtrain is:",X_train)
 
 # Building a vocabulary of words from the given documents
 vocab = {}
 for i in range(len(X_train)):
     word_list = []
     for word in X_train[i].split():
-        # word_new = word.strip(string.punctuation).lower()
-        # if (len(word_new) > 2) and (word_new not in stopwords):
-        #     if word_new in vocab:
-        #         vocab[word_new] += 1
-        #     else:
-        #         vocab[word_new] = 1
         if word in vocab:
             vocab[word] += 1
         else:
             vocab[word] = 1
 
             # In[6]:
-print(vocab)
-# Plotting a graph of no of words with a given frequency to decide cutoff drequency
-# print("values are:",vocab.values())
-num_words = [0 for i in range(max(vocab.values()) + 1)]
-print(num_words)
-freq = [i for i in range(max(vocab.values()) + 1)]
-for key in vocab:
-    num_words[vocab[key]] += 1
-# plt.plot(freq, num_words)
-# plt.axis([1, 10, 0, 20000])
-# plt.xlabel("Frequency")
-# plt.ylabel("No of words")
-# plt.grid()
-# plt.show()
-
-# In[7]:
+# print(vocab)
 
 
-# cutoff_freq = 80
-# # For deciding cutoff frequency
-# num_words_above_cutoff = len(vocab) - sum(num_words[0:cutoff_freq])
-# print("Number of words with frequency higher than cutoff frequency({}) :".format(cutoff_freq), num_words_above_cutoff)
-
-# In[8]:
-
-
-# Words with frequency higher than cutoff frequency are chosen as features
-# (i.e we remove words with low frequencies as they would not be significant )
 features = []
 for key in vocab:
     features.append(key)
@@ -154,7 +70,9 @@ for key in vocab:
 #         if vocab[key] >= cutoff_freq:
 #             features.append(key)
 
-print("features are:::::::",features)
+# print("features are:::::::",features)
+
+
 # In[9]:
 
 
@@ -181,20 +99,6 @@ for i in range(len(X_test)):
         if word in features:
             X_test_dataset[i][features.index(word)] += 1
 
-# In[11]:
-
-
-# Using sklearn's Multinomial Naive Bayes
-clf = MultinomialNB()
-clf.fit(X_train_dataset, Y_train)
-Y_test_pred = clf.predict(X_test_dataset)
-sklearn_score_train = clf.score(X_train_dataset, Y_train)
-print("Sklearn's score on training data :", sklearn_score_train)
-sklearn_score_test = clf.score(X_test_dataset, Y_test)
-print("Sklearn's score on testing data :", sklearn_score_test)
-print("Classification report for testing data :-")
-print(classification_report(Y_test, Y_test_pred))
-
 
 # In[12]:
 
@@ -203,10 +107,9 @@ print(classification_report(Y_test, Y_test_pred))
 class MultinomialNaiveBayes:
 
     def __init__(self):
-        # count is a dictionary which stores several dictionaries corresponding to each news category
-        # each value in the subdictionary represents the freq of the key corresponding to that news category
+
         self.count = {}
-        # classes represents the different news categories
+        # classes represents the labels
         self.classes = None
 
     def fit(self, X_train, Y_train):
@@ -271,16 +174,34 @@ class MultinomialNaiveBayes:
 # In[13]:
 
 
-clf2 = MultinomialNaiveBayes()
-clf2.fit(X_train_dataset, Y_train)
-Y_test_pred = clf2.predict(X_test_dataset)
-our_score_test = clf2.score(Y_test_pred, Y_test)
+mnb = MultinomialNaiveBayes()
+mnb.fit(X_train_dataset, Y_train)
+
+Y_test_pred = mnb.predict(X_test_dataset)
+
+our_score_test = mnb.score(Y_test_pred, Y_test)
+
 print("Our score on testing data :", our_score_test)
 print("Classification report for testing data :-")
-print(classification_report(Y_test, Y_test_pred))
+
+
+
+# Using sklearn's Multinomial Naive Bayes
+NB = MultinomialNB()
+NB.fit(X_train_dataset, Y_train)
+Y_test_pred = NB.predict(X_test_dataset)
+
+sklearn_score_train = NB.score(X_train_dataset, Y_train)
+print("Sklearn's score on training data :", sklearn_score_train)
+
+sklearn_score_test = NB.score(X_test_dataset, Y_test)
+print("Sklearn's score on testing data :", sklearn_score_test)
+
+print("Classification report for testing data :-")
 
 # In[14]:
 
+# print("Score of our model on test data:", our_score_test)
+# print("Score of inbuilt sklearn's MultinomialNB on the same data :", sklearn_score_test)
 
-print("Score of our model on test data:", our_score_test)
-print("Score of inbuilt sklearn's MultinomialNB on the same data :", sklearn_score_test)
+print(classification_report(Y_test, Y_test_pred))
