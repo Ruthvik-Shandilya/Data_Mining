@@ -1,31 +1,17 @@
-from codecs import StreamReaderWriter
-
 from textblob import TextBlob
-from typing import Union, TextIO
-from sklearn.model_selection import train_test_split
 from collections import Counter
-import numpy as np
 import pandas as pd
-import csv
 import nltk
-#nltk.download('stopwords')
 from nltk.corpus import stopwords
 import codecs
 import re
 
-from sklearn.feature_extraction.text import CountVectorizer
-from nltk.tokenize import RegexpTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import classification_report, confusion_matrix
 
 
 nltk.download('punkt')
 nltk.download('wordnet')
-from itertools import groupby
-from nltk import word_tokenize,pos_tag_sents
 nltk.download('averaged_perceptron_tagger')
-from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
 contractions = {
@@ -212,15 +198,9 @@ def sentiment(text):
     analysis = TextBlob(text)
     if analysis.sentiment[0] > 0:
         return 'positive'
-    elif analysis.sentiment[0] < 0:
+    elif analysis.sentiment[0] <= 0:
         return 'negative'
-    else:
-        return 'neutral'
 
-
-
-#from nltk.stem.snowball import SnowballStemmer
-#stemmer = SnowballStemmer("english")
 
 data = pd.read_csv(r"Dataset.csv")
 
@@ -228,9 +208,15 @@ permanent = data[['categories', 'name', 'reviews.title' , 'reviews.rating' , 're
 
 df2=permanent.dropna(axis=0,how='any')
 
-#df2['label_num'] = df2['reviews.doRecommend'].map({'TRUE':1, 'FALSE':0})
-
 df2['Combined_feature'] = df2['reviews.title'] + df2['reviews.text']
+
+df2['Labels'] = df2['reviews.doRecommend']
+
+df2['mod_name_1'] = df2['name'].apply(''.join).str.replace('[^A-Za-z\s]+','')
+
+df2['mod_name_2'] = df2['mod_name_1'].replace('\n','', regex=True)
+
+df2['Product_Name'] = df2['mod_name_2'].replace('\r','', regex=True)
 
 df2['review_without_trailing_leading_blank spaces']=df2['Combined_feature'].str.strip()
 
@@ -247,28 +233,15 @@ df2['removed_repetation_chars']=df2['review_without_specialCharacters_alphaNumer
 stop_words = set(stopwords.words('english'))
 df2['review_without_stopwords'] = df2['removed_repetation_chars'].apply(lambda x: ' '.join([word for word in x.split() if word not in (stop_words)]))
 
-df2['polarity'] = df2['review_without_stopwords'].apply(lambda x: TextBlob(x).sentiment[0])
+df2['Feature_0'] = df2['review_without_stopwords']
 
-#df2['Sentiment'] = df2['review_without_stopwords'].apply(sentiment)
+df2['Feature_1'] = df2['review_without_stopwords'].apply(lambda x: TextBlob(x).sentiment[0])
 
-df2['subjectivity'] = df2['review_without_stopwords'].apply(lambda x: TextBlob(x).sentiment[1])
-
-#df2['tokenized_sents']=df2.apply(lambda row: nltk.word_tokenize(row['review_without_stopwords']),axis=1)
-
-#stemmer= PorterStemmer()
-
-#df2['stemmed']=df2['tokenized_sents'].apply(lambda x: [stemmer.stem(y) for y in x])
-
-#df2['lematization']=df2['tokenized_sents'].apply(lambda x: [lem.lemmatize(y,"v") for y in x])
-
-#df2['POS_Tags']=pos_tag_sents(df2['review_without_stopwords'].apply(word_tokenize).tolist())
+df2['Feature_2'] = df2['reviews.rating']
 
 df2['positive_words'] = df2['review_without_stopwords'].apply(Positive_word_count)
 
 df2['negative_words'] = df2['review_without_stopwords'].apply(Negative_word_count)
-
-
-# print(df2)
 
 export_csv = df2.to_csv (r'Dataset_preprocessed.csv', index = None, header=True)
 f = codecs.open("Dataset_preprocessed.csv","r","utf-8")
